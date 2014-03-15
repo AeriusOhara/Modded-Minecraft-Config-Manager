@@ -26,6 +26,10 @@ namespace Modded_Minecraft_Updater
             MyGlobals.initSQLite();
             checkTables();
 
+            if (!Directory.Exists("files")) MyGlobals.createDirectory("files");
+            if (!Directory.Exists("configs")) MyGlobals.createDirectory("configs");
+            if (!Directory.Exists("mods")) MyGlobals.createDirectory("mods");
+
             populateConfigChanges();
             populateInterface();
         }
@@ -66,7 +70,7 @@ namespace Modded_Minecraft_Updater
             SQLiteDataReader reader = cmd.ExecuteReader();
 
             // For every config change we found
-            while(reader.Read())
+            while (reader.Read())
             {
                 // Insert it to the ListView
                 // Create a string array containing the folder and path
@@ -79,7 +83,7 @@ namespace Modded_Minecraft_Updater
                 configChangesList.Items.Add(listViewItem);
             }
 
-            if(configChangesList.Items.Count == 0)
+            if (configChangesList.Items.Count == 0)
             {
                 performUpdateBtn.Enabled = false;
             }
@@ -95,14 +99,14 @@ namespace Modded_Minecraft_Updater
             this.editConfigBtn.Enabled = false;
             this.removeConfigBtn.Enabled = false;
 
-            if(MyGlobals.settingExists("workingFolder"))
+            if (MyGlobals.settingExists("workingFolder"))
             {
                 string workingFolder = MyGlobals.getSetting("workingFolder");
                 this.folderTextBox.Text = workingFolder;
                 MyGlobals.workingDirectory = workingFolder + Path.DirectorySeparatorChar;
             }
 
-            if(MyGlobals.settingExists("moveOverConfigs") && MyGlobals.getSetting("moveOverConfigs") == "true")
+            if (MyGlobals.settingExists("moveOverConfigs") && MyGlobals.getSetting("moveOverConfigs") == "true")
             {
                 // Remove the event temporarily so it doesn't invoke the checkChanged 
                 // function when we change it here
@@ -114,7 +118,7 @@ namespace Modded_Minecraft_Updater
                 MyGlobals.moveOverConfigs = true;
             }
 
-            if(MyGlobals.settingExists("moveOverMods") && MyGlobals.getSetting("moveOverMods") == "true")
+            if (MyGlobals.settingExists("moveOverMods") && MyGlobals.getSetting("moveOverMods") == "true")
             {
                 // Remove the event temporarily so it doesn't invoke the checkChanged 
                 // function when we change it here
@@ -130,19 +134,18 @@ namespace Modded_Minecraft_Updater
         private void setFolderButton_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog folderDialog = new FolderBrowserDialog();
-            //folderDialog.RootFolder = Environment.SpecialFolder.MyComputer;
             folderDialog.SelectedPath = MyGlobals.workingDirectory;
             folderDialog.Description = "Select the ROOT Folder of your Modded Minecraft Installation. This is the folder that has the folders\n\"mods\" and \"config\".";
             folderDialog.ShowNewFolderButton = false;
-            if(folderDialog.ShowDialog() == DialogResult.OK)
+            if (folderDialog.ShowDialog() == DialogResult.OK)
             {
                 // If a folder was selected and OK was pressed
-                string selectedPath = folderDialog.SelectedPath;
+                string selectedPath = folderDialog.SelectedPath + "\\";
                 string selectedName = Path.GetFileName(selectedPath);
-                MyGlobals.workingDirectory = folderDialog.SelectedPath;
+                MyGlobals.workingDirectory = selectedPath;
 
                 string query = String.Empty;
-                if(MyGlobals.settingExists("workingFolder"))
+                if (MyGlobals.settingExists("workingFolder"))
                 {
                     query = "UPDATE `Settings` SET `value`=\"" + selectedPath + "\" WHERE `name`=\"workingFolder\";";
                 }
@@ -159,7 +162,7 @@ namespace Modded_Minecraft_Updater
         private void addConfigBtn_Click(object sender, EventArgs e)
         {
             addEditConfig addEditForm = new addEditConfig();
-            if(addEditForm.ShowDialog(this) == DialogResult.OK)
+            if (addEditForm.ShowDialog(this) == DialogResult.OK)
             {
                 populateConfigChanges();
             }
@@ -188,7 +191,7 @@ namespace Modded_Minecraft_Updater
             MyGlobals.editingConfigEntry = true;
 
             addEditConfig addEditForm = new addEditConfig();
-            if(addEditForm.ShowDialog(this) == DialogResult.OK)
+            if (addEditForm.ShowDialog(this) == DialogResult.OK)
             {
                 populateConfigChanges();
             }
@@ -198,12 +201,12 @@ namespace Modded_Minecraft_Updater
 
         private void configChangesList_DoubleClick(object sender, EventArgs e)
         {
-            if(configChangesList.SelectedItems.Count > 0)
+            if (configChangesList.SelectedItems.Count > 0)
             {
                 MyGlobals.editingConfigEntry = true;
 
                 addEditConfig addEditForm = new addEditConfig();
-                if(addEditForm.ShowDialog(this) == DialogResult.OK)
+                if (addEditForm.ShowDialog(this) == DialogResult.OK)
                 {
                     populateConfigChanges();
                 }
@@ -230,7 +233,7 @@ namespace Modded_Minecraft_Updater
 
         private void configChangesList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(configChangesList.SelectedItems.Count > 0)
+            if (configChangesList.SelectedItems.Count > 0)
             {
                 // Clear Globals
                 MyGlobals.curSelectedConfigFile = String.Empty;
@@ -255,7 +258,7 @@ namespace Modded_Minecraft_Updater
 
         private void checkEditRemoveButtons()
         {
-            if(configChangesList.SelectedItems.Count > 0)
+            if (configChangesList.SelectedItems.Count > 0)
             {
                 this.removeConfigBtn.Enabled = true;
                 this.editConfigBtn.Enabled = true;
@@ -290,7 +293,7 @@ namespace Modded_Minecraft_Updater
 
                 return true;
             }
-            catch(System.Exception excpt)
+            catch (System.Exception excpt)
             {
                 Console.WriteLine(excpt.Message);
 
@@ -309,14 +312,14 @@ namespace Modded_Minecraft_Updater
             // For example, if we'd get C:\minecraft\config\hillarious.cfg
             // we'd want to get the part: config\hillarious.cfg
             int i = 0;
-            foreach(string str in splitFilePath)
+            foreach (string str in splitFilePath)
             {
-                if(str == "config")
+                if (str == "config")
                 {
                     found = true;
                 }
 
-                if(found)
+                if (found)
                 {
                     relativeFilePath += splitFilePath[i];
                     relativeFilePath += "\\";
@@ -336,7 +339,7 @@ namespace Modded_Minecraft_Updater
             {
                 MyGlobals.dblink = new SQLiteConnection("Data Source=data.s3db;Version=3;FailIfMissing=True;");
             }
-            catch(SQLiteException ex)
+            catch (SQLiteException ex)
             {
                 MessageBox.Show(ex.ToString());
             }
@@ -345,7 +348,7 @@ namespace Modded_Minecraft_Updater
             {
                 MyGlobals.dblink.Open();
             }
-            catch(SQLiteException ex)
+            catch (SQLiteException ex)
             {
                 SQLiteConnection.CreateFile("data.s3db");
 
@@ -355,7 +358,7 @@ namespace Modded_Minecraft_Updater
                     // Open the file
                     MyGlobals.dblink.Open();
                 }
-                catch(SQLiteException ex3)
+                catch (SQLiteException ex3)
                 {
                     //MessageBox.Show(ex3.ToString());
                     // Couldn't open the database file, which means it wasn't
@@ -377,7 +380,7 @@ namespace Modded_Minecraft_Updater
             {
                 sqlcmd.ExecuteNonQuery();
             }
-            catch(SQLiteException ex)
+            catch (SQLiteException ex)
             {
                 MessageBox.Show("Failed to execute SQL Query (Exception: " + ex + ")\n\nThe Query given was:\n" + query);
             }
@@ -398,7 +401,7 @@ namespace Modded_Minecraft_Updater
             SQLiteDataReader reader = cmd.ExecuteReader();
 
             // For every entry we found
-            while(reader.Read())
+            while (reader.Read())
             {
                 // Return the value we got
                 return reader["Value"].ToString();
@@ -430,7 +433,7 @@ namespace Modded_Minecraft_Updater
             SQLiteDataReader reader = cmd.ExecuteReader();
 
             // For every entry we found
-            while(reader.Read())
+            while (reader.Read())
             {
                 // Setting exists
                 return true;
@@ -444,15 +447,15 @@ namespace Modded_Minecraft_Updater
         {
             string value = String.Empty;
 
-            if(settingExists(setting))
+            if (settingExists(setting))
             {
                 value = getSetting(setting);
 
-                if(value == "true")
+                if (value == "true")
                 {
                     setSetting(setting, "false");
                 }
-                else if(value == "false")
+                else if (value == "false")
                 {
                     setSetting(setting, "true");
                 }
@@ -473,7 +476,7 @@ namespace Modded_Minecraft_Updater
         public static int getIntFromString(string text)
         {
             int i;
-            if(Int32.TryParse(text, out i))
+            if (Int32.TryParse(text, out i))
             {
                 return i;
             }
